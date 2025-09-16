@@ -12,7 +12,7 @@ license = {text = "MIT"}
 
 
 [tool.pdm]
-distribution = false
+packages = ["wavewhiz_app"]
 
 [tool.pdm.scripts]
 runserver = "python manage.py runserver"

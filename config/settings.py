@@ -73,7 +73,7 @@ TEMPLATES = [
         },
     },
 ]
-
+AUTH_USER_MODEL = 'wavewhiz_app.Usuario'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
@@ -112,6 +112,15 @@ REST_FRAMEWORK = {
     ),
 }
 
+from rest_framework_simplejwt.settings import api_settings as jwt_api_settings
+SIMPLE_JWT = {
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'TOKEN_OBTAIN_SERIALIZER': 'wavewhiz_app.serializers.CustomTokenObtainPairSerializer',
+    'USERNAME_FIELD': 'email',
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -134,3 +143,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    'wavewhiz_app.auth_backend.EmailBackend',
+]

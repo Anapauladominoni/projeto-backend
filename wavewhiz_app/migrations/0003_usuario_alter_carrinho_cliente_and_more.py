@@ -31,12 +31,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='carrinho',
             name='cliente',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='carrinhos', to='wavewhiz_app.usuario'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='carrinhos', to='wavewhiz_app.Usuario'),
         ),
         migrations.AlterField(
             model_name='loja',
             name='empreendedor',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lojas', to='wavewhiz_app.usuario'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lojas', to='wavewhiz_app.Usuario'),
         ),
         migrations.DeleteModel(
             name='Cliente',

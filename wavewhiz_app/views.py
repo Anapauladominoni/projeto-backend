@@ -4,7 +4,9 @@ from .models import (
     Produto,
     MetodoPagamento,
     Carrinho,
-    ItemCarrinho
+    ItemCarrinho,
+    Loja,
+    CategoriaLoja,
 )
 from .serializers import (
     UsuarioSerializer,
@@ -12,6 +14,8 @@ from .serializers import (
     MetodoPagamentoSerializer,
     CarrinhoSerializer,
     ItemCarrinhoSerializer
+    , LojaSerializer,
+    CategoriaLojaSerializer,
 )
 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -75,4 +79,41 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff: 
             return Usuario.objects.all()
+        # usuários comuns só veem seu próprio perfil
         return Usuario.objects.filter(id=user.id)
+
+    def update(self, request, *args, **kwargs):
+        # permitir que usuários atualizem apenas seu próprio perfil
+        user = request.user
+        if not user.is_staff:
+            # se não for staff, forçar o PK para o próprio usuário
+            kwargs['pk'] = user.pk
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        user = request.user
+        if not user.is_staff:
+            kwargs['pk'] = user.pk
+        return super().partial_update(request, *args, **kwargs)
+
+
+class LojaViewSet(viewsets.ModelViewSet):
+    queryset = Loja.objects.all()
+    serializer_class = LojaSerializer
+
+    def get_permissions(self):
+        if self.action in ['create']:
+            return [IsAuthenticated()]
+        if self.action in ['list']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        # atribui automaticamente o empreendedor como o usuário autenticado
+        serializer.save(empreendedor=self.request.user)
+
+
+class CategoriaLojaViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = CategoriaLoja.objects.all()
+    serializer_class = CategoriaLojaSerializer
+    permission_classes = [AllowAny]
