@@ -20,7 +20,7 @@ Registrados pelo router em `wavewhiz_app/urls.py`:
 
 - `GET/POST /produtos/` - CRUD de produtos
 - `GET/POST /metodos-pagamento/` - CRUD de métodos de pagamento
-- `GET/POST /carrinhos/` - Carrinho do cliente (apenas carrinhos do próprio cliente são visíveis)
+- `GET/POST /carrinhos/` - Carrinho do cliente (apenas carrinhos do próprio cliente são visíveis; admins podem filtrar com `?cliente=<id>`)
 - `GET/POST /itens-carrinho/` - Itens do carrinho
 - `GET /categorias/` - Listar categorias de loja (público)
 
@@ -78,6 +78,79 @@ Exemplo de listagem (GET /categorias/):
   {"id": 2, "nome": "Artesanatos"}
 ]
 ```
+
+### Produto
+- `id`, `loja` (ID), `nome`, `preco` (decimal), `estoque` (int), `imagem`, `descricao`
+
+Exemplo de criação (autenticado como empreendedor):
+
+```
+POST /produtos/
+{
+  "loja": 1,
+  "nome": "Produto Exemplo",
+  "preco": 29.99,
+  "estoque": 100,
+  "descricao": "Descrição do produto"
+}
+```
+
+### Carrinho
+- `id`, `cliente` (ID, readonly), `metodo_pagamento` (ID), `itens` (lista readonly), `total` (calculado readonly), `finalizado` (bool)
+
+Exemplo de criação (cliente cria seu carrinho automaticamente):
+
+```
+POST /carrinhos/
+{
+  "metodo_pagamento": 1
+}
+```
+
+- O `cliente` é definido automaticamente como o usuário autenticado.
+
+### ItemCarrinho
+- `id`, `carrinho_id` (write-only), `produto` (readonly), `produto_id` (write-only), `quantidade` (int), `subtotal` (calculado readonly)
+
+Exemplo de adição de item ao carrinho:
+
+```
+POST /itens-carrinho/
+{
+  "carrinho_id": 1,
+  "produto_id": 2,
+  "quantidade": 3
+}
+```
+
+### MetodoPagamento
+- `id`, `nome` (string)
+
+## Funcionalidades do Carrinho
+### Adicionar Itens ao Carrinho
+1. Crie ou use um carrinho existente (GET /carrinhos/ para listar os seus).
+2. Adicione itens com POST /itens-carrinho/, especificando `carrinho` (ID do carrinho), `produto_id` (ID do produto) e `quantidade`.
+3. O subtotal é calculado automaticamente (preço × quantidade).
+
+### Concluir (Finalizar) um Carrinho
+Para finalizar uma compra:
+1. Atualize o carrinho com PATCH /carrinhos/{id}/, definindo `"finalizado": true`.
+2. Exemplo:
+
+```
+PATCH /carrinhos/1/
+{
+  "finalizado": true
+}
+```
+
+- Uma vez finalizado, o carrinho não pode ser editado (lógica pode ser adicionada no futuro para validar estoque, etc.).
+- O `total` é a soma dos subtotais de todos os itens.
+
+### Filtros Disponíveis
+- **Lojas**: `GET /lojas/?categoria=<id>` ou `GET /lojas/?empreendedor=<id>`
+- **Produtos**: `GET /produtos/?loja=<id>`
+- **Carrinhos** (admins): `GET /carrinhos/?cliente=<id>`
 
 ## Permissões e Funcionalidades por Role
 Cada usuário tem um `role` (`admin`, `cliente`, `empreendedor`) que define o que pode fazer. Abaixo, as funcionalidades principais por role.

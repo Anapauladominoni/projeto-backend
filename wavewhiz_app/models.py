@@ -138,16 +138,9 @@ class Loja(models.Model):
             raise ValidationError("O usuário deve ter role 'empreendedor' para criar uma loja.")
 
 class Produto(models.Model):
-    CATEGORIAS = [
-        ('ALIMENTOS', 'Alimentos'),
-        ('ARTESANATOS', 'Artesanatos'),
-        ('ROUPAS', 'Roupas'),
-        ('OUTROS', 'Outros'),
-    ]
     loja = models.ForeignKey(Loja, on_delete=models.CASCADE, related_name='produtos')
     nome = models.CharField(max_length=150)
     preco = models.DecimalField(max_digits=10, decimal_places=2)
-    categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='OUTROS')
     estoque = models.PositiveIntegerField(default=0)
     imagem = models.ImageField(upload_to='produtos/', blank=True, null=True)
     descricao = models.TextField(blank=True)
@@ -157,7 +150,7 @@ class Produto(models.Model):
         verbose_name_plural = "Produtos"
 
     def __str__(self):
-        return f"{self.nome} - {self.loja.nome} ({self.get_categoria_display()})"
+        return f"{self.nome} - {self.loja.nome}"
 
 class MetodoPagamento(models.Model):
     nome = models.CharField(max_length=40)

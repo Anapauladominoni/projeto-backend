@@ -119,11 +119,14 @@ class ItemCarrinhoSerializer(serializers.ModelSerializer):
     produto_id = serializers.PrimaryKeyRelatedField(
         queryset=Produto.objects.all(), write_only=True, source='produto'
     )
+    carrinho_id = serializers.PrimaryKeyRelatedField(
+        queryset=Carrinho.objects.all(), write_only=True, source='carrinho'
+    )
     subtotal = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCarrinho
-        fields = ['id', 'produto', 'produto_id', 'quantidade', 'subtotal']
+        fields = ['id', 'carrinho_id', 'produto', 'produto_id', 'quantidade', 'subtotal']
 
     def get_subtotal(self, obj):
         return obj.subtotal()
@@ -131,7 +134,7 @@ class ItemCarrinhoSerializer(serializers.ModelSerializer):
 class CarrinhoSerializer(serializers.ModelSerializer):
     cliente = UsuarioSerializer(read_only=True)
     cliente_id = serializers.PrimaryKeyRelatedField(
-        queryset=Usuario.objects.all(), write_only=True, source='cliente'
+        queryset=Usuario.objects.all(), write_only=True, source='cliente', required=False
     )
     itens = ItemCarrinhoSerializer(many=True, read_only=True)
     total = serializers.SerializerMethodField()

@@ -28,11 +28,8 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         loja_id = self.request.query_params.get('loja')
-        categoria = self.request.query_params.get('categoria')
         if loja_id:
             queryset = queryset.filter(loja_id=loja_id)
-        if categoria:
-            queryset = queryset.filter(categoria__iexact=categoria)
         return queryset
 
 
@@ -47,9 +44,25 @@ class CarrinhoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]  
 
     def get_queryset(self):
-
         user = self.request.user
-        return super().get_queryset().filter(cliente=user)  
+        queryset = super().get_queryset()
+        cliente_id = self.request.query_params.get('cliente')
+        if cliente_id:
+            if user.is_staff:
+                queryset = queryset.filter(cliente__id=cliente_id)
+            else:
+                # Non-staff can only see their own, ignore the param
+                queryset = queryset.filter(cliente=user)
+        else:
+            if user.is_staff:
+                # Staff can see all carts if no filter
+                pass  # no filter
+            else:
+                queryset = queryset.filter(cliente=user)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(cliente=self.request.user)  
 
 
 class ItemCarrinhoViewSet(viewsets.ModelViewSet):
@@ -57,8 +70,14 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
     serializer_class = ItemCarrinhoSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return super().get_queryset()
+        # Non-staff see only items from their own carts
+        return super().get_queryset().filter(carrinho__cliente=user)
 
+    def perform_create(self, serializer):
         serializer.save()
 
 
@@ -104,9 +123,19 @@ class LojaViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create']:
             return [IsAuthenticated()]
-        if self.action in ['list']:
+        if self.action in ['list', 'retrieve']:
             return [AllowAny()]
         return [IsAuthenticated()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        categoria_id = self.request.query_params.get('categoria')
+        empreendedor_id = self.request.query_params.get('empreendedor')
+        if categoria_id:
+            queryset = queryset.filter(categorias__id=categoria_id)
+        if empreendedor_id:
+            queryset = queryset.filter(empreendedor__id=empreendedor_id)
+        return queryset
 
     def perform_create(self, serializer):
         # atribui automaticamente o empreendedor como o usuário autenticado
